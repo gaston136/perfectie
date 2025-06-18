@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Parfum Shop</title>
+<style>
+  /* Basis styling */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #f0eafc, #c5d4f0);
+    margin: 0; padding: 0;
+    color: #222;
+  }
+  h1 {
+    text-align: center;
+    margin: 20px 0;
+    font-weight: 700;
+    color: #4b3f72;
+    text-shadow: 1px 1px 2px #aaa;
+  }
+  /* Tabs */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .tab {
+    background: #6b5b95;
+    color: white;
+    padding: 12px 25px;
+    margin: 0 8px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    transition: background-color 0.3s ease;
+  }
+  .tab:hover {
+    background: #4b3f72;
+  }
+  .tab.active {
+    background: #f67280;
+    color: white;
+    box-shadow: 0 4px 10px rgba(246,114,128,0.7);
+  }
+  /* Gallery */
+  .gallery {
+    max-width: 1000px;
+    margin: 0 auto 40px auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(180px,1fr));
+    gap: 22px;
+    padding: 0 10px;
+  }
+  .card {
+    background: white;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+  }
+  .card img {
+    width: 100%;
+    object-fit: cover;
+    height: 180px;
+    border-bottom: 1px solid #eee;
+  }
+  .card-body {
+    padding: 12px 14px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #4b3f72;
+    margin-bottom: 6px;
+  }
+  .card-price {
+    font-weight: 700;
+    color: #f67280;
+    font-size: 1rem;
+  }
+  /* Winkelmandje knop */
+  #cart-btn {
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+    background: #f67280;
+    border: none;
+    color: white;
+    font-size: 1.6rem;
+    padding: 16px 22px;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(246,114,128,0.7);
+    transition: background-color 0.3s ease;
+    z-index: 10;
+  }
+  #cart-btn:hover {
+    background: #d95c65;
+  }
+  /* Winkelmandje panel */
+  #cart-panel {
+    position: fixed;
+    top: 0; right: -380px;
+    width: 350px;
+    height: 100vh;
+    background: white;
+    box-shadow: -6px 0 18px rgba(0,0,0,0.1);
+    transition: right 0.35s ease;
+    padding: 24px 20px;
+    overflow-y: auto;
+    z-index: 9;
+  }
+  #cart-panel.open {
+    right: 0;
+  }
+  #cart-panel h2 {
+    color: #4b3f72;
+    margin-top: 0;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .cart-item {
+    display: flex;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 12px;
+  }
+  .cart-item img {
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+    object-fit: cover;
+    margin-right: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  .cart-info {
+    flex-grow: 1;
+  }
+  .cart-info h4 {
+    margin: 0 0 8px 0;
+    font-weight: 700;
+    color: #4b3f72;
+  }
+  .cart-info p {
+    margin: 0;
+    color: #f67280;
+    font-weight: 600;
+  }
+  .cart-item button.remove-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.4rem;
+    color: #e74c3c;
+    cursor: pointer;
+    padding: 0 6px;
+    font-weight: 700;
+  }
+  .cart-item button.remove-btn:hover {
+    color: #c0392b;
+  }
+  #cart-total {
+    margin-top: 20px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-align: right;
+    color: #4b3f72;
+  }
+  /* Overlay voor modal */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.55);
+    z-index: 20;
+    justify-content: center;
+    align-items: center;
+  }
+  #modal-overlay.show {
+    display: flex;
+  }
+  /* Modal content */
+  #modal {
+    background: white;
+    border-radius: 16px;
+    max-width: 420px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 24px 28px;
+    box-shadow: 0 8px 22px rgba(0,0,0,0.15);
+    position: relative;
+  }
+  #modal h3 {
+    margin-top: 0;
+    font-weight: 700;
+    color: #4b3f72;
+    margin-bottom: 14px;
+  }
+  #modal button.close-modal {
+    position: absolute;
+    right: 18px;
+    top: 18px;
+    border: none;
+    background: transparent;
+    font-size: 1.8rem;
+    color: #666;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  #modal button.close-modal:hover {
+    color: #333;
+  }
+  /* Reviews */
+  #reviews {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 12px 16px;
+    background: #fafafa;
+  }
+  .review {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+  }
+  .review:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+  .review .author {
+    font-weight: 700;
+    color: #4b3f72;
+  }
+  .review .stars {
+    color: #f67280;
+    font-size: 1.1rem;
+    margin: 4px 0;
+  }
+  .review .text {
+    font-size: 0.9rem;
+    color: #444;
+  }
+  /* Review form */
+  #review-form {
+    display: flex;
+    flex-direction: column;
+  }
+  #review-form label {
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: #4b3f72;
+  }
+  #review-form input,
+  #review-form select,
+  #review-form textarea {
+    margin-bottom: 14px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-family: inherit;
+  }
+  #review-form textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+  #review-form button {
+    background: #f67280;
+    color: white;
+    border: none;
+    font-weight: 700;
+    padding: 12px 0;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: background-color 0.3s ease;
+  }
+  #review-form button:hover {
+    background: #d95c65;
+  }
+  /* Responsive */
+  @media (max-width: 600px) {
+    .gallery {
+      grid-template-columns: repeat(auto-fill,minmax(140px,1fr));
+      gap: 16px;
+    }
+    #cart-panel {
+      width: 90vw;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>🌸 Parfum Collectie 🌸</h1>
+
+<div class="tabs" role="tablist" aria-label="Parfum categorieën">
+  <div class="tab active" role="tab" aria-selected="true" tabindex="0" data-category="men" id="tab-men">Mannen</div>
+  <div class="tab" role="tab" aria-selected="false" tabindex="-1" data-category="women" id="tab-women">Vrouwen</div>
+  <div class="tab" role="tab" aria-selected="false" tabindex="-1" data-category="unisex" id="tab-unisex">Unisex</div>
+</div>
+
+<div id="gallery" class="gallery" aria-live="polite" aria-label="Parfum overzicht"></div>
+
+<button id="cart-btn" aria-label="Open winkelmandje">🛒</button>
+
+<div id="cart-panel" aria-hidden="true" aria-label="Winkelmandje">
+  <h2>Jouw Winkelmandje</h2>
+  <div id="cart-items"></div>
+  <div id="cart-total"></div>
+</div>
+
+<!-- Modal overlay en content -->
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-desc">
+  <div id="modal">
+    <button class="close-modal" aria-label="Sluit modal">&times;</button>
+    <h3 id="modal-title">Beoordelingen</h3>
+    <div id="reviews" aria-live="polite"></div>
+    <form id="review-form" aria-label="Voeg een beoordeling toe">
+      <label for="reviewer-name">Naam</label>
+      <input type="text" id="reviewer-name" name="reviewer-name" required placeholder="Je naam" />
+      
+      <label for="review-rating">Beoordeling</label>
+      <select id="review-rating" name="review-rating" required>
+        <option value="" disabled selected>--- Kies ---</option>
+        <option value="5">★★★★★ Uitstekend</option>
+        <option value="4">★★★★ Goed</option>
+        <option value="3">★★★ Gemiddeld</option>
+        <option value="2">★★ Matig</option>
+        <option value="1">★ Slecht</option>
+      </select>
+      
+      <label for="review-text">Reactie</label>
+      <textarea id="review-text" name="review-text" required placeholder="Schrijf hier je reactie..."></textarea>
+      
+      <button type="submit">Verzend beoordeling</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Data parfum collectie
+  const parfums = {
+    men: [
+      {name: "Dior Sauvage", img:"https://images.unsplash.com/photo-1542831371-d531d36971e6?auto=format&fit=crop&w=400&q=80", url:"https://www.dior.com/en_eu/products/beauty-Y0998321-dior-sauvage-eau-de-toilette", price: 85},
+      {name: "Bleu de Chanel", img:"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=400&q=80", url:"https://www.chanel.com/nl/parfum/bleu-de-chanel/", price: 95},
+      {name: "Acqua Di Gio", img:"https://images.unsplash.com/photo-1568646969248-5f9c40ca16a0?auto=format&fit=crop&w=400&q=80", url:"https://www.giorgioarmani.com/nl_NL/product/acqua-di-gio-eau-de-toilette-50ml", price: 70},
+      {name: "Paco Rabanne 1 Million", img:"https://images.unsplash.com/photo-1533025792151-f2488ddf407f?auto=format&fit=crop&w=400&q=80", url:"https://www.pacorabanne.com/nl-nl/1-million", price: 75},
+      {name: "Versace Eros", img:"https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/men/fragrances/eros/", price: 80},
+      {name: "Tom Ford Noir", img:"https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80", url:"https://www.tomford.com/noir-extreme-eau-de-parfum/T0-FT2131.html", price: 120},
+      {name: "Yves Saint Laurent La Nuit", img:"https://images.unsplash.com/photo-1518546305924-35bc892a582d?auto=format&fit=crop&w=400&q=80", url:"https://www.yslbeauty.nl/parfums/la-nuit-de-lhomme", price: 90},
+      {name: "Hugo Boss Bottled", img:"https://images.unsplash.com/photo-1583155764267-b0f5df31f7de?auto=format&fit=crop&w=400&q=80", url:"https://www.hugoboss.com/nl-nl/bottled-eau-de-toilette", price: 65},
+      {name: "Calvin Klein Eternity", img:"https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/eternity-men-eau-de-toilette", price: 60},
+      {name: "Jean Paul Gaultier Le Male", img:"https://images.unsplash.com/photo-1524635962361-304a8d8a41bc?auto=format&fit=crop&w=400&q=80", url:"https://www.jeanpaulgaultier.com/en-fragrance/le-male", price: 70},
+      {name: "Givenchy Gentlemen Only", img:"https://images.unsplash.com/photo-1551741719-56b743d4e779?auto=format&fit=crop&w=400&q=80", url:"https://www.givenchybeauty.com/en-gb/gentlemen-only", price: 85},
+      {name: "Gucci Guilty", img:"https://images.unsplash.com/photo-1507608869277-6f7c2eabd79f?auto=format&fit=crop&w=400&q=80", url:"https://www.gucci.com/nl/nl/ca/beauty/fragrances/gucci-guilty", price: 75},
+      {name: "Burberry Mr. Burberry", img:"https://images.unsplash.com/photo-1535631991045-519179e1b29e?auto=format&fit=crop&w=400&q=80", url:"https://www.burberry.com/mr-burberry", price: 80},
+      {name: "Prada Luna Rossa", img:"https://images.unsplash.com/photo-1575843939737-69225d3df324?auto=format&fit=crop&w=400&q=80", url:"https://www.prada.com/eu/en/beauty/fragrances/mens_fragances/luna_rossa.html", price: 85},
+      {name: "Dolce & Gabbana Light Blue", img:"https://images.unsplash.com/photo-1536751974893-f89ca8c17c18?auto=format&fit=crop&w=400&q=80", url:"https://www.dolcegabbana.com/en/fragrances/light-blue", price: 70},
+      {name: "Montblanc Explorer", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=400&q=80", url:"https://www.montblanc.com/en-us/fragrances/explorer", price: 75},
+      {name: "Versace Dylan Blue", img:"https://images.unsplash.com/photo-1563941604091-8d5e850682c9?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/men/fragrances/dylan-blue", price: 80},
+      {name: "Hermès Terre d’Hermès", img:"https://images.unsplash.com/photo-1536331225606-d1b9a1a18cfa?auto=format&fit=crop&w=400&q=80", url:"https://www.hermes.com/nl/nl/product/terre-d-hermes/", price: 90},
+      {name: "Armani Code", img:"https://images.unsplash.com/photo-1512427691650-98b59147b3b9?auto=format&fit=crop&w=400&q=80", url:"https://www.giorgioarmani.com/nl_NL/product/armani-code-eau-de-toilette", price: 85},
+      {name: "Versace Man Eau Fraiche", img:"https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/men/fragrances/man-eau-fraiche", price: 70},
+      {name: "Viktor & Rolf Spicebomb", img:"https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=400&q=80", url:"https://www.viktor-rolf.com/en/men-fragrance-spicebomb", price: 95},
+      {name: "Calvin Klein CK One", img:"https://images.unsplash.com/photo-1562157877-ffe31a27b0ab?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/ck-one", price: 60},
+      {name: "Jean Paul Gaultier Ultra Male", img:"https://images.unsplash.com/photo-1502880474046-6f308df9d7e4?auto=format&fit=crop&w=400&q=80", url:"https://www.jeanpaulgaultier.com/en-fragrance/ultra-male", price: 75},
+      {name: "Bvlgari Man In Black", img:"https://images.unsplash.com/photo-1549887533-3b23390e8b9d?auto=format&fit=crop&w=400&q=80", url:"https://www.bulgari.com/en-gb/men/fragrance/man-in-black", price: 85},
+      {name: "Hermès Eau des Merveilles", img:"https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=400&q=80", url:"https://www.hermes.com/nl/nl/product/eau-des-merveilles/", price: 90},
+      {name: "Dolce & Gabbana The One", img:"https://images.unsplash.com/photo-1528233763623-265da55af154?auto=format&fit=crop&w=400&q=80", url:"https://www.dolcegabbana.com/en/fragrances/the-one", price: 85},
+      {name: "Tommy Hilfiger Tommy", img:"https://images.unsplash.com/photo-1511376777868-611b54f68947?auto=format&fit=crop&w=400&q=80", url:"https://usa.tommy.com/en/tommy-eau-de-toilette", price: 65},
+      {name: "Montblanc Legend", img:"https://images.unsplash.com/photo-1512026601452-178e58a0f9f0?auto=format&fit=crop&w=400&q=80", url:"https://www.montblanc.com/en-us/fragrances/legend", price: 70},
+      {name: "Hugo Boss The Scent", img:"https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=400&q=80", url:"https://www.hugoboss.com/nl-nl/the-scent", price: 75},
+      {name: "Lacoste Blanc", img:"https://images.unsplash.com/photo-1524253482453-3fed8d2fe12b?auto=format&fit=crop&w=400&q=80", url:"https://www.lacoste.com/eu/fragrance/blanc", price: 60},
+      {name: "Givenchy Pi", img:"https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&w=400&q=80", url:"https://www.givenchybeauty.com/en-gb/pi", price: 70},
+      {name: "Versace Pour Homme", img:"https://images.unsplash.com/photo-1504977102363-d4ecffb55372?auto=format&fit=crop&w=400&q=80", url:"https://www.versace.com/eu/en-us/men/fragrances/pour-homme", price: 75},
+      {name: "Calvin Klein Obsessed", img:"https://images.unsplash.com/photo-1563225409-c6e52e9d9d12?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/obsessed-men", price: 65},
+      {name: "Ralph Lauren Polo Blue", img:"https://images.unsplash.com/photo-1512499617640-c2f999a4bcb4?auto=format&fit=crop&w=400&q=80", url:"https://www.ralphlauren.com/polo-blue", price: 80},
+      {name: "John Varvatos Artisan", img:"https://images.unsplash.com/photo-1528756514091-dee2b44182e0?auto=format&fit=crop&w=400&q=80", url:"https://www.johnvarvatos.com/collections/men-fragrances", price: 85}
+    ],
+    women: [
+      {name: "Chanel No.5", img:"https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=400&q=80", url:"https://www.chanel.com/nl/parfum/chanel-no5/", price: 110},
+      {name: "Dior J'adore", img:"https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=400&q=80", url:"https://www.dior.com/en_eu/products/beauty-Y0990550-j-adore-eau-de-parfum", price: 105},
+      {name: "Yves Saint Laurent Black Opium", img:"https://images.unsplash.com/photo-1508364765814-72c7948856a6?auto=format&fit=crop&w=400&q=80", url:"https://www.yslbeauty.nl/parfums/black-opium", price: 100},
+      {name: "Gucci Bloom", img:"https://images.unsplash.com/photo-1494567989936-1179eb1aef10?auto=format&fit=crop&w=400&q=80", url:"https://www.gucci.com/nl/nl/ca/beauty/fragrances/gucci-bloom", price: 95},
+      {name: "Marc Jacobs Daisy", img:"https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=400&q=80", url:"https://www.marcjacobs.com/daisy/", price: 90},
+      {name: "Lancôme La Vie Est Belle", img:"https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=400&q=80", url:"https://www.lancome.nl/producten/parfum/la-vie-est-belle", price: 95},
+      {name: "Viktor & Rolf Flowerbomb", img:"https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=400&q=80", url:"https://www.viktor-rolf.com/en/women-fragrance-flowerbomb", price: 90},
+      {name: "Jo Malone Peony & Blush Suede", img:"https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80", url:"https://www.jomalone.com/peony-blush-suede", price: 105},
+      {name: "Tom Ford Black Orchid", img:"https://images.unsplash.com/photo-1542831371-d531d36971e6?auto=format&fit=crop&w=400&q=80", url:"https://www.tomford.com/black-orchid-eau-de-parfum/T0-FT1613.html", price: 120},
+      {name: "Estée Lauder Beautiful", img:"https://images.unsplash.com/photo-1487412912498-0447578fcca8?auto=format&fit=crop&w=400&q=80", url:"https://www.esteelauder.nl/product/681/72874/product-catalog/beauty-parfum/beautiful", price: 85}
+    ],
+    unisex: [
+      {name: "CK One", img:"https://images.unsplash.com/photo-1502880474046-6f308df9d7e4?auto=format&fit=crop&w=400&q=80", url:"https://www.calvinklein.nl/nl/ck-one", price: 60},
+      {name: "Byredo Gypsy Water", img:"https://images.unsplash.com/photo-1542623024-03cd624430c4?auto=format&fit=crop&w=400&q=80", url:"https://www.byredo.com/gypsy-water", price: 110},
+      {name: "Le Labo Santal 33", img:"https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80", url:"https://www.lelabofragrances.com/santal-33", price: 130},
+      {name: "Jo Malone Wood Sage & Sea Salt", img:"https://images.unsplash.com/photo-1528731708534-816fe59f90dc?auto=format&fit=crop&w=400&q=80", url:"https://www.jomalone.com/wood-sage-sea-salt", price: 105},
+      {name: "Tom Ford Neroli Portofino", img:"https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=400&q=80", url:"https://www.tomford.com/neroli-portofino-eau-de-parfum/T0-FT2137.html", price: 125},
+      {name: "Hermès Un Jardin Sur Le Nil", img:"https://images.unsplash.com/photo-1536331225606-d1b9a1a18cfa?auto=format&fit=crop&w=400&q=80", url:"https://www.hermes.com/nl/nl/product/un-jardin-sur-le-nil/", price: 95},
+      {name: "Diptyque Philosykos", img:"https://images.unsplash.com/photo-1507608869277-6f7c2eabd79f?auto=format&fit=crop&w=400&q=80", url:"https://www.diptyqueparis.com/en_eu/philosykos", price: 100},
+      {name: "Maison Margiela Replica", img:"https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=400&q=80", url:"https://www.maisonmargiela.com/us/replica", price: 110},
+      {name: "Gucci Mémoire d’une Odeur", img:"https://images.unsplash.com/photo-1511376777868-611b54f68947?auto=format&fit=crop&w=400&q=80", url:"https://www.gucci.com/nl/nl/ca/beauty/fragrances/gucci-memoire-d-une-odeur", price: 120},
+      {name: "Escentric Molecules Molecule 01", img:"https://images.unsplash.com/photo-1563225409-c6e52e9d9d12?auto=format&fit=crop&w=400&q=80", url:"https://www.escentricmolecules.com/products/molecule-01", price: 90}
+    ]
+  };
+
+  // Reviews data: { parfumName: [ {name, rating, text}, ... ] }
+  const reviews = {};
+
+  // Huidige geselecteerde categorie
+  let currentCategory = 'men';
+
+  // Winkelmandje array
+  let cart = [];
+
+  // Elementen
+  const gallery = document.getElementById('gallery');
+  const tabs = document.querySelectorAll('.tab');
+  const cartBtn = document.getElementById('cart-btn');
+  const cartPanel = document.getElementById('cart-panel');
+  const cartItemsContainer = document.getElementById('cart-items');
+  const cartTotalDisplay = document.getElementById('cart-total');
+  const modalOverlay = document.getElementById('modal-overlay');
+  const modal = document.getElementById('modal');
+  const closeModalBtn = modal.querySelector('.close-modal');
+  const reviewsContainer = document.getElementById('reviews');
+  const reviewForm = document.getElementById('review-form');
+  const reviewerNameInput = document.getElementById('reviewer-name');
+  const reviewRatingSelect = document.getElementById('review-rating');
+  const reviewTextInput = document.getElementById('review-text');
+
+  // Functie: toon parfums in huidige categorie
+  function displayParfums() {
+    gallery.innerHTML = '';
+    const parfums = parfumsData[currentCategory];
+    parfums.forEach(parfum => {
+      const card = document.createElement('div');
+      card.className = 'parfum-card';
+
+      card.innerHTML = `
+        <img src="${parfum.img}" alt="${parfum.name}">
+        <h3>${parfum.name}</h3>
+        <p>€${parfum.price}</p>
+        <a href="${parfum.url}" target="_blank" class="btn">Bekijk</a>
+        <button class="btn add-to-cart" data-name="${parfum.name}" data-price="${parfum.price}">In winkelmand</button>
+      `;
+      gallery.appendChild(card);
+    });
+  }
+
+  // Functie: tab wisselen
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentCategory = tab.dataset.category;
+      displayParfums();
+    });
+  });
+
+  // Functie: winkelmand tonen/verbergen
+  cartBtn.addEventListener('click', () => {
+    cartPanel.classList.toggle('open');
+    updateCartDisplay();
+  });
+
+  // Functie: winkelmand bijwerken
+  function updateCartDisplay() {
+    cartItemsContainer.innerHTML = '';
+    let total = 0;
+    cart.forEach(item => {
+      const div = document.createElement('div');
+      div.textContent = `${item.name} - €${item.price}`;
+      cartItemsContainer.appendChild(div);
+      total += item.price;
+    });
+    cartTotalDisplay.textContent = total.toFixed(2);
+  }
+
+  // Functie: item toevoegen aan winkelmand
+  gallery.addEventListener('click', (e) => {
+    if (e.target.classList.contains('add-to-cart')) {
+      const name = e.target.dataset.name;
+      const price = parseFloat(e.target.dataset.price);
+      cart.push({name, price});
+      updateCartDisplay();
+      alert(`${name} is toegevoegd aan je winkelmand.`);
+    }
+  });
+
+  // Initialisatie
+  displayParfums();
+</script>
+
+</body>
+</html>
